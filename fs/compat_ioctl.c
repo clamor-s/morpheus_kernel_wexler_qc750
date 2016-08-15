@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ioctl32.c: Conversion between 32bit and 64bit native ioctls.
  *
  * Copyright (C) 1997-2000  Jakub Jelinek  (jakub@redhat.com)
@@ -49,7 +49,6 @@
 #include <linux/elevator.h>
 #include <linux/rtc.h>
 #include <linux/pci.h>
-#include <linux/module.h>
 #include <linux/serial.h>
 #include <linux/if_tun.h>
 #include <linux/ctype.h>
