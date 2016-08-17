@@ -56,6 +56,8 @@
  */
 
 #include <linux/kernel.h>
+#include <asm/system.h>
+#include <asm/processor.h>
 
 struct llist_head {
 	struct llist_node *first;
@@ -146,7 +148,7 @@ static inline struct llist_node *llist_next(struct llist_node *node)
  * @new:	new entry to be added
  * @head:	the head for your lock-less list
  *
- * Returns true if the list was empty prior to adding this entry.
+ * Return whether list is empty before adding.
  */
 static inline bool llist_add(struct llist_node *new, struct llist_head *head)
 {
