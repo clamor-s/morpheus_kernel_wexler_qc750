@@ -819,9 +819,9 @@ static int f2fs_statfs(struct dentry *dentry, struct kstatfs *buf)
 	return 0;
 }
 
-static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
+static int f2fs_show_options(struct seq_file *seq, struct vfsmount *vfs)
 {
-	struct f2fs_sb_info *sbi = F2FS_SB(root->d_sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(vfs->mnt_sb);
 
 	if (!f2fs_readonly(sbi->sb) && test_opt(sbi, BG_GC)) {
 		if (test_opt(sbi, FORCE_FG_GC))
@@ -1040,7 +1040,7 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)
 	}
 
 	if (*flags & MS_RDONLY) {
-		writeback_inodes_sb(sb, WB_REASON_SYNC);
+		writeback_inodes_sb(sb);
 		sync_inodes_sb(sb);
 
 		set_sbi_flag(sbi, SBI_IS_DIRTY);

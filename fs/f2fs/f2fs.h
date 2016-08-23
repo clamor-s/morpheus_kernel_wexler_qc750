@@ -20,6 +20,7 @@
 #include <linux/kobject.h>
 #include <linux/sched.h>
 #include <linux/vmalloc.h>
+#include <linux/llist.h>
 #include <linux/bio.h>
 #include <linux/blkdev.h>
 #include <linux/fscrypto.h>
