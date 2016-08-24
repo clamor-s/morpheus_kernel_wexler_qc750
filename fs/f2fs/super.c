@@ -554,13 +554,9 @@ static struct inode *f2fs_alloc_inode(struct super_block *sb)
 
 	init_once((void *) fi);
 
-	if (percpu_counter_init(&fi->dirty_pages, 0)) {
-		kmem_cache_free(f2fs_inode_cachep, fi);
-		return NULL;
-	}
-
 	/* Initialize f2fs-specific inode info */
 	fi->vfs_inode.i_version = 1;
+	atomic_set(&fi->dirty_pages, 0);
 	fi->i_current_depth = 1;
 	fi->i_advise = 0;
 	init_rwsem(&fi->i_sem);
@@ -677,18 +673,7 @@ static void f2fs_i_callback(struct rcu_head *head)
 
 static void f2fs_destroy_inode(struct inode *inode)
 {
-	percpu_counter_destroy(&F2FS_I(inode)->dirty_pages);
 	call_rcu(&inode->i_rcu, f2fs_i_callback);
-}
-
-static void destroy_percpu_info(struct f2fs_sb_info *sbi)
-{
-	int i;
-
-	for (i = 0; i < NR_COUNT_TYPE; i++)
-		percpu_counter_destroy(&sbi->nr_pages[i]);
-	percpu_counter_destroy(&sbi->alloc_valid_block_count);
-	percpu_counter_destroy(&sbi->total_valid_inode_count);
 }
 
 static void f2fs_put_super(struct super_block *sb)
@@ -749,8 +734,6 @@ static void f2fs_put_super(struct super_block *sb)
 
 	sb->s_fs_info = NULL;
 	kfree(sbi->raw_super);
-
-	destroy_percpu_info(sbi);
 	kfree(sbi);
 }
 
@@ -1422,6 +1405,7 @@ int sanity_check_ckpt(struct f2fs_sb_info *sbi)
 static void init_sb_info(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_super_block *raw_super = sbi->raw_super;
+	int i;
 
 	sbi->log_sectors_per_block =
 		le32_to_cpu(raw_super->log_sectors_per_block);
@@ -1441,6 +1425,9 @@ static void init_sb_info(struct f2fs_sb_info *sbi)
 	sbi->cur_victim_sec = NULL_SECNO;
 	sbi->max_victim_search = DEF_MAX_VICTIM_SEARCH;
 
+	for (i = 0; i < NR_COUNT_TYPE; i++)
+		atomic_set(&sbi->nr_pages[i], 0);
+
 	sbi->dir_level = DEF_DIR_LEVEL;
 	sbi->interval_time[CP_TIME] = DEF_CP_INTERVAL;
 	sbi->interval_time[REQ_TIME] = DEF_IDLE_INTERVAL;
@@ -1456,23 +1443,6 @@ static void init_sb_info(struct f2fs_sb_info *sbi)
 				F2FS_KEY_DESC_PREFIX_SIZE);
 	sbi->key_prefix_size = F2FS_KEY_DESC_PREFIX_SIZE;
 #endif
-}
-
-static int init_percpu_info(struct f2fs_sb_info *sbi)
-{
-	int i, err;
-
-	for (i = 0; i < NR_COUNT_TYPE; i++) {
-		err = percpu_counter_init(&sbi->nr_pages[i], 0);
-		if (err)
-			return err;
-	}
-
-	err = percpu_counter_init(&sbi->alloc_valid_block_count, 0);
-	if (err)
-		return err;
-
-	return percpu_counter_init(&sbi->total_valid_inode_count, 0);
 }
 
 /*
@@ -1656,10 +1626,6 @@ try_onemore:
 	init_waitqueue_head(&sbi->cp_wait);
 	init_sb_info(sbi);
 
-	err = init_percpu_info(sbi);
-	if (err)
-		goto free_options;
-
 	/* get an inode for meta space */
 	sbi->meta_inode = f2fs_iget(sb, F2FS_META_INO(sbi));
 	if (IS_ERR(sbi->meta_inode)) {
@@ -1676,13 +1642,13 @@ try_onemore:
 
 	sbi->total_valid_node_count =
 				le32_to_cpu(sbi->ckpt->valid_node_count);
-	percpu_counter_set(&sbi->total_valid_inode_count,
-				le32_to_cpu(sbi->ckpt->valid_inode_count));
+	sbi->total_valid_inode_count =
+				le32_to_cpu(sbi->ckpt->valid_inode_count);
 	sbi->user_block_count = le64_to_cpu(sbi->ckpt->user_block_count);
 	sbi->total_valid_block_count =
 				le64_to_cpu(sbi->ckpt->valid_block_count);
 	sbi->last_valid_block_count = sbi->total_valid_block_count;
-
+	sbi->alloc_valid_block_count = 0;
 	for (i = 0; i < NR_INODE_TYPE; i++) {
 		INIT_LIST_HEAD(&sbi->inode_list[i]);
 		spin_lock_init(&sbi->inode_lock[i]);
@@ -1863,7 +1829,6 @@ free_meta_inode:
 	make_bad_inode(sbi->meta_inode);
 	iput(sbi->meta_inode);
 free_options:
-	destroy_percpu_info(sbi);
 	kfree(options);
 free_sb_buf:
 	kfree(raw_super);

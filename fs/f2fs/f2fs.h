@@ -511,7 +511,7 @@ struct f2fs_inode_info {
 	/* Use below internally in f2fs*/
 	unsigned long flags;		/* use to pass per-file flags */
 	struct rw_semaphore i_sem;	/* protect fi info */
-	struct percpu_counter dirty_pages;	/* # of dirty pages */
+	atomic_t dirty_pages;		/* # of dirty pages */
 	f2fs_hash_t chash;		/* hash value of given file name */
 	unsigned int clevel;		/* maximum level of given file name */
 	nid_t i_xattr_nid;		/* node id that contains xattrs */
@@ -886,24 +886,19 @@ struct f2fs_sb_info {
 	unsigned int total_sections;		/* total section count */
 	unsigned int total_node_count;		/* total node block count */
 	unsigned int total_valid_node_count;	/* valid node block count */
+	unsigned int total_valid_inode_count;	/* valid inode count */
 	loff_t max_file_blocks;			/* max block index of file */
 	int active_logs;			/* # of active logs */
 	int dir_level;				/* directory level */
 
 	block_t user_block_count;		/* # of user blocks */
 	block_t total_valid_block_count;	/* # of valid blocks */
+	block_t alloc_valid_block_count;	/* # of allocated blocks */
 	block_t discard_blks;			/* discard command candidats */
 	block_t last_valid_block_count;		/* for recovery */
 	u32 s_next_generation;			/* for NFS support */
 	atomic_t nr_wb_bios;			/* # of writeback bios */
-
-	/* # of pages, see count_type */
-	struct percpu_counter nr_pages[NR_COUNT_TYPE];
-	/* # of allocated blocks */
-	struct percpu_counter alloc_valid_block_count;
-
-	/* valid inode count */
-	struct percpu_counter total_valid_inode_count;
+	atomic_t nr_pages[NR_COUNT_TYPE];	/* # of pages, see count_type */
 
 	struct f2fs_mount_info mount_opt;	/* mount options */
 
@@ -1182,8 +1177,6 @@ static inline void f2fs_i_blocks_write(struct inode *, blkcnt_t, bool);
 static inline bool inc_valid_block_count(struct f2fs_sb_info *sbi,
 				 struct inode *inode, blkcnt_t *count)
 {
-	blkcnt_t diff;
-
 #ifdef CONFIG_F2FS_FAULT_INJECTION
 	if (time_to_inject(FAULT_BLOCK))
 		return false;
@@ -1192,17 +1185,15 @@ static inline bool inc_valid_block_count(struct f2fs_sb_info *sbi,
 	 * let's increase this in prior to actual block count change in order
 	 * for f2fs_sync_file to avoid data races when deciding checkpoint.
 	 */
-	percpu_counter_add(&sbi->alloc_valid_block_count, (*count));
-
 	spin_lock(&sbi->stat_lock);
+	sbi->alloc_valid_block_count += (block_t)(*count);
 	sbi->total_valid_block_count += (block_t)(*count);
 	if (unlikely(sbi->total_valid_block_count > sbi->user_block_count)) {
-		diff = sbi->total_valid_block_count - sbi->user_block_count;
-		*count -= diff;
+		*count = sbi->user_block_count - sbi->total_valid_block_count ;
 		sbi->total_valid_block_count = sbi->user_block_count;
 		if (!*count) {
+			sbi->alloc_valid_block_count += (block_t)(*count);
 			spin_unlock(&sbi->stat_lock);
-			percpu_counter_sub(&sbi->alloc_valid_block_count, diff);
 			return false;
 		}
 	}
@@ -1226,20 +1217,20 @@ static inline void dec_valid_block_count(struct f2fs_sb_info *sbi,
 
 static inline void inc_page_count(struct f2fs_sb_info *sbi, int count_type)
 {
-	percpu_counter_inc(&sbi->nr_pages[count_type]);
+	atomic_inc(&sbi->nr_pages[count_type]);
 	set_sbi_flag(sbi, SBI_IS_DIRTY);
 }
 
 static inline void inode_inc_dirty_pages(struct inode *inode)
 {
-	percpu_counter_inc(&F2FS_I(inode)->dirty_pages);
+	atomic_inc(&F2FS_I(inode)->dirty_pages);
 	inc_page_count(F2FS_I_SB(inode), S_ISDIR(inode->i_mode) ?
 				F2FS_DIRTY_DENTS : F2FS_DIRTY_DATA);
 }
 
 static inline void dec_page_count(struct f2fs_sb_info *sbi, int count_type)
 {
-	percpu_counter_dec(&sbi->nr_pages[count_type]);
+	atomic_dec(&sbi->nr_pages[count_type]);
 }
 
 static inline void inode_dec_dirty_pages(struct inode *inode)
@@ -1248,28 +1239,26 @@ static inline void inode_dec_dirty_pages(struct inode *inode)
 			!S_ISLNK(inode->i_mode))
 		return;
 
-	percpu_counter_dec(&F2FS_I(inode)->dirty_pages);
+	atomic_dec(&F2FS_I(inode)->dirty_pages);
 	dec_page_count(F2FS_I_SB(inode), S_ISDIR(inode->i_mode) ?
 				F2FS_DIRTY_DENTS : F2FS_DIRTY_DATA);
 }
 
-static inline s64 get_pages(struct f2fs_sb_info *sbi, int count_type)
+static inline int get_pages(struct f2fs_sb_info *sbi, int count_type)
 {
-	return percpu_counter_sum_positive(&sbi->nr_pages[count_type]);
+	return atomic_read(&sbi->nr_pages[count_type]);
 }
 
-static inline s64 get_dirty_pages(struct inode *inode)
+static inline int get_dirty_pages(struct inode *inode)
 {
-	return percpu_counter_sum_positive(&F2FS_I(inode)->dirty_pages);
+	return atomic_read(&F2FS_I(inode)->dirty_pages);
 }
 
 static inline int get_blocktype_secs(struct f2fs_sb_info *sbi, int block_type)
 {
 	unsigned int pages_per_sec = sbi->segs_per_sec * sbi->blocks_per_seg;
-	unsigned int segs = (get_pages(sbi, block_type) + pages_per_sec - 1) >>
-						sbi->log_blocks_per_seg;
-
-	return segs / sbi->segs_per_sec;
+	return ((get_pages(sbi, block_type) + pages_per_sec - 1)
+			>> sbi->log_blocks_per_seg) / sbi->segs_per_sec;
 }
 
 static inline block_t valid_user_blocks(struct f2fs_sb_info *sbi)
@@ -1358,11 +1347,11 @@ static inline bool inc_valid_node_count(struct f2fs_sb_info *sbi,
 	if (inode)
 		f2fs_i_blocks_write(inode, 1, true);
 
+	sbi->alloc_valid_block_count++;
 	sbi->total_valid_node_count++;
 	sbi->total_valid_block_count++;
 	spin_unlock(&sbi->stat_lock);
 
-	percpu_counter_inc(&sbi->alloc_valid_block_count);
 	return true;
 }
 
@@ -1389,17 +1378,23 @@ static inline unsigned int valid_node_count(struct f2fs_sb_info *sbi)
 
 static inline void inc_valid_inode_count(struct f2fs_sb_info *sbi)
 {
-	percpu_counter_inc(&sbi->total_valid_inode_count);
+	spin_lock(&sbi->stat_lock);
+	f2fs_bug_on(sbi, sbi->total_valid_inode_count == sbi->total_node_count);
+	sbi->total_valid_inode_count++;
+	spin_unlock(&sbi->stat_lock);
 }
 
 static inline void dec_valid_inode_count(struct f2fs_sb_info *sbi)
 {
-	percpu_counter_dec(&sbi->total_valid_inode_count);
+	spin_lock(&sbi->stat_lock);
+	f2fs_bug_on(sbi, !sbi->total_valid_inode_count);
+	sbi->total_valid_inode_count--;
+	spin_unlock(&sbi->stat_lock);
 }
 
-static inline s64 valid_inode_count(struct f2fs_sb_info *sbi)
+static inline unsigned int valid_inode_count(struct f2fs_sb_info *sbi)
 {
-	return percpu_counter_sum_positive(&sbi->total_valid_inode_count);
+	return sbi->total_valid_inode_count;
 }
 
 static inline struct page *f2fs_grab_cache_page(struct address_space *mapping,
@@ -2173,11 +2168,11 @@ struct f2fs_stat_info {
 	unsigned long long hit_largest, hit_cached, hit_rbtree;
 	unsigned long long hit_total, total_ext;
 	int ext_tree, zombie_tree, ext_node;
-	s64 ndirty_node, ndirty_dent, ndirty_meta, ndirty_data, inmem_pages;
-	unsigned int ndirty_dirs, ndirty_files, ndirty_all;
+	int ndirty_node, ndirty_meta;
+	int ndirty_dent, ndirty_dirs, ndirty_data, ndirty_files, ndirty_all;
 	int nats, dirty_nats, sits, dirty_sits, fnids;
 	int total_count, utilization;
-	int bg_gc, wb_bios;
+	int bg_gc, inmem_pages, wb_bios;
 	int inline_xattr, inline_inode, inline_dir, orphans;
 	unsigned int valid_count, valid_node_count, valid_inode_count;
 	unsigned int bimodal, avg_vblocks;
