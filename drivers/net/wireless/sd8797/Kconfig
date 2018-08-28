@@ -9,12 +9,12 @@ config SD8797
 config STA_SUPPORT
 	depends on SD8797
 	bool "WLAN station support"
-	default y
+	default n
 
 config UAP_SUPPORT
 	depends on SD8797
 	bool "Soft AP Support"
-	default y
+	default n
 
 config WIFI_DIRECT_SUPPORT
 	depends on SD8797
