@@ -61,25 +61,6 @@
 		.debounce_interval = _deb,	\
 	}
 
-static struct gpio_keys_button kai_keys[] = {
-	[0] = GPIO_KEY(KEY_VOLUMEUP, PR0, 0),
-	[1] = GPIO_KEY(KEY_VOLUMEDOWN, PR1, 0),
-	[2] = GPIO_IKEY(KEY_POWER, MAX77663_IRQ_BASE + MAX77663_IRQ_ONOFF_EN0_FALLING, 0, 100),
-	[3] = GPIO_IKEY(KEY_POWER, MAX77663_IRQ_BASE + MAX77663_IRQ_ONOFF_EN0_1SEC, 0, 3000),
-};
-
-static struct gpio_keys_platform_data kai_keys_platform_data = {
-	.buttons	= kai_keys,
-	.nbuttons	= ARRAY_SIZE(kai_keys),
-};
-
-static struct platform_device kai_keys_device = {
-	.name   = "gpio-keys",
-	.id     = 0,
-	.dev    = {
-		.platform_data  = &kai_keys_platform_data,
-	},
-};
 static struct gpio_keys_button kai_keys_max7663[] = {
 	[0] = GPIO_KEY(KEY_VOLUMEUP, PR0, 0),
 	[1] = GPIO_KEY(KEY_VOLUMEDOWN, PR1, 0),
@@ -100,14 +81,11 @@ static struct platform_device kai_keys_max7663_device = {
 		.platform_data  = &kai_keys_max7663_platform_data,
 	},
 };
+
 int __init kai_keys_init(void)
 {
 	pr_info("Registering gpio keys\n");
-	if(machine_is_nabi2_xd()||machine_is_n1010()||machine_is_n1020()||machine_is_ns_14t004()||machine_is_itq1000()||machine_is_n1011()
-		||machine_is_n1050()||machine_is_w1011a() || machine_is_birch() || machine_is_qc750() || machine_is_wikipad()){
-		platform_device_register(&kai_keys_max7663_device);
-	}else
-	platform_device_register(&kai_keys_device);
+	platform_device_register(&kai_keys_max7663_device);
 
 	return 0;
 }

@@ -47,40 +47,36 @@
 /* Audio-related GPIOs */
 #define TEGRA_GPIO_RT5631_RST TEGRA_GPIO_PX2
 #define TEGRA_GPIO_CDC_IRQ		-1
+
 #if defined(CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X)
-	#define TEGRA_GPIO_SPKR_EN		TEGRA_GPIO_PB1
-#elif defined(CONFIG_SND_SOC_TEGRA_RT5631) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_RT5631)
-	#define TEGRA_GPIO_SPKR_EN		-1
-#elif defined(CONFIG_SND_SOC_TEGRA_RT5639) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_RT5639)
-	#define TEGRA_GPIO_SPKR_EN		-1
+#define TEGRA_GPIO_SPKR_EN		TEGRA_GPIO_PB1
 #endif
+
 #define TEGRA_GPIO_HP_DET		TEGRA_GPIO_PW2
 #define TEGRA_GPIO_INT_MIC_EN		TEGRA_GPIO_PK3
 #define TEGRA_GPIO_EXT_MIC_EN		TEGRA_GPIO_PK4
+
 /*Touch releated GPIO*/
 #define TEGRA_GPIO_TOUCH_DETECT   TEGRA_GPIO_PH4
 #define TEGRA_GPIO_TOUCH_DETECT_0   TEGRA_GPIO_PH5
 #define TEGRA_GPIO_TOUCH_DETECT_1   TEGRA_GPIO_PH6
 #define TEGRA_GPIO_TOUCH_DETECT_2      TEGRA_GPIO_PH7
+
 /* Tegra Modem related GPIOs */
 #define TEGRA_GPIO_W_DISABLE		TEGRA_GPIO_PDD7
 #define TEGRA_GPIO_MODEM_RSVD1		TEGRA_GPIO_PV0
 #define TEGRA_GPIO_MODEM_RSVD2		TEGRA_GPIO_PH7
 
 //add by vin for usi_3g_module
-
 #define USI_3G_PWR_EN_GPIO		TEGRA_GPIO_PY3
 #define USI_3G_USB_EN_GPIO		TEGRA_GPIO_PY2
 #define USI_3G_PWR_KEY_GPIO		TEGRA_GPIO_PY1
-
 
 /* Stat LED GPIO */
 #define TEGRA_GPIO_STAT_LED		(MAX77663_GPIO_BASE + MAX77663_GPIO7)
 
 /*ota enable*/
-
 #define TEGRA_GPIO_OTG_ENABLE TEGRA_GPIO_PH3
-
 
 /*****************Interrupt tables ******************/
 /* External peripheral act as interrupt controller */
@@ -127,27 +123,27 @@ int __init touch_init_synaptics_kai(void);
 #define MPU_GYRO_BUS_NUM	0
 #define KEENHI_COMPASS_BUS_NUM	0
 #define KEENHI_LIGHTSENSOR_I2C_BUS 0
-//#define MPU_GYRO_ORIENTATION	{ 0, -1, 0, -1, 0, 0, 0, 0, -1 }//{ 0, -1, 0, -1, 0, 0, 0, 0, -1 } //¾É
 #define MPU_GYRO_ORIENTATION	{ 1, 0, 0, 0, 1, 0, 0, 0, 1 }
 #define MPU_GYRO_ORIENTATION_BESYBUY	{ 0, -1, 0, 1, 0, 0, 0, 0, 1 }
+
 #if (MPU_GYRO_TYPE == MPU_TYPE_MPU3050)
 #define MPU_ACCEL_NAME		"kxtf9"
-#define MPU_ACCEL_IRQ_GPIO	0//TEGRA_GPIO_PL1
+#define MPU_ACCEL_IRQ_GPIO	0
 #define MPU_ACCEL_ADDR		0x0F
 #define MPU_ACCEL_BUS_NUM	0
-//#define MPU_ACCEL_ORIENTATION	{ 0, 1, 0, 1, 0, 0, 0, 0, -1 }//{ 0, -1, 0, -1, 0, 0, 0, 0, -1 }//¾É
 #define MPU_ACCEL_ORIENTATION	{ -1, 0, 0, 0, -1, 0, 0, 0, 1 }
 #define MPU_ACCEL_ORIENTATION_BESTBUY	{ -1, 0, 0, 0, -1, 0, 0, 0, 1 }
 #endif
+
 #ifdef  CONFIG_MPU_SENSORS_AK8963
 #define MPU_COMPASS_NAME	"ak8963"
 #else
 #define MPU_COMPASS_NAME	"ak8975"
 #endif
+
 #define MPU_COMPASS_IRQ_GPIO	0
 #define MPU_COMPASS_ADDR	0x0C
 #define MPU_COMPASS_BUS_NUM	0
-//#define MPU_COMPASS_ORIENTATION	{ 0, 1, 0, 1, 0, 0, 0, 0, -1 }//{ 1, 0, 0, 0, 1, 0, 0, 0, 1 }//¾É
 #define MPU_COMPASS_ORIENTATION	{ 0, 1, 0, 1, 0, 0, 0, 0, -1 }
 #define MPU_COMPASS_ORIENTATION_BESTBUY	{ 0, -1, 0, -1, 0, 0, 0, 0, -1 }
 #define TDIODE_OFFSET	(10000) /* in millicelsius */

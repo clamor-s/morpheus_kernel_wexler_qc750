@@ -150,7 +150,7 @@ void tegra_assert_system_reset(char mode, const char *cmd)
 	reg = readl_relaxed(reset);
 	reg |= 0x10;
 	writel_relaxed(reg, reset);
-	
+
 #endif
 }
 static int modem_id;
@@ -689,22 +689,22 @@ void tegra_get_board_info(struct board_info *bi)
 #endif
 		//hardcode
 
-		if (machine_is_nabi2()||machine_is_cm9000()||machine_is_nabi2_3d()||
+/*		if (machine_is_nabi2()||machine_is_cm9000()||machine_is_nabi2_3d()||
 			machine_is_nabi2_xd() || machine_is_nabi_2s() || machine_is_qc750() ||  machine_is_n710() || machine_is_itq700() || machine_is_itq701() || machine_is_mm3201()
-			|| machine_is_n1010() || machine_is_n750() || machine_is_birch() || machine_is_wikipad() ||machine_is_ns_14t004()){
+			|| machine_is_n1010() || machine_is_n750() || machine_is_birch() || machine_is_wikipad() ||machine_is_ns_14t004()){*/
 			bi->board_id = 0xf41;
 			bi->sku = 0;
 			bi->fab = 1;
 			bi->major_revision = 0;
 			bi->minor_revision = 0;
-		}
+/*		}
 		else{
 			bi->board_id = (system_serial_high >> 16) & 0xFFFF;
 			bi->sku = (system_serial_high) & 0xFFFF;
 			bi->fab = (system_serial_low >> 24) & 0xFF;
 			bi->major_revision = (system_serial_low >> 16) & 0xFF;
 			bi->minor_revision = (system_serial_low >> 8) & 0xFF;
-		}
+		}*/
 #ifdef CONFIG_OF
 	}
 #endif

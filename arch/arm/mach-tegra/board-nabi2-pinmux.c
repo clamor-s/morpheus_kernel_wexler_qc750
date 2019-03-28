@@ -32,6 +32,7 @@
 		.slew_rising = TEGRA_SLEW_SLOWEST,		\
 		.slew_falling = TEGRA_SLEW_SLOWEST,		\
 	}
+
 /* Setting the drive strength of pins
  * hsm: Enable High speed mode (ENABLE/DISABLE)
  * Schimit: Enable/disable schimit (ENABLE/DISABLE)
@@ -61,7 +62,6 @@
 		.slew_falling = TEGRA_SLEW_##_pullup_slew,	\
 	}
 
-/* !!!FIXME!!!! POPULATE THIS TABLE */
 static __initdata struct tegra_drive_pingroup_config kai_drive_pinmux[] = {
 	/* DEFAULT_DRIVE(<pin_group>), */
 	/* SET_DRIVE(ATA, DISABLE, DISABLE, DIV_1, 31, 31, FAST, FAST) */
@@ -330,7 +330,7 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	VI_PINMUX(VI_HSYNC,        VI,            NORMAL,    NORMAL,   INPUT, DEFAULT, DISABLE),
 	VI_PINMUX(VI_VSYNC,        VI,            NORMAL,    NORMAL,   INPUT, DEFAULT, DISABLE),
 	VI_PINMUX(VI_PCLK,         VI,            NORMAL,    NORMAL,   INPUT, DEFAULT, DISABLE),
-	VI_PINMUX(VI_MCLK,         VI,            NORMAL,    NORMAL, INPUT, DEFAULT, DISABLE), 
+	VI_PINMUX(VI_MCLK,         VI,            NORMAL,    NORMAL, INPUT, DEFAULT, DISABLE),
 	/* MODEM */
 	DEFAULT_PINMUX(GPIO_PV0,        RSVD,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GPIO_PV1,        RSVD,            NORMAL,    NORMAL,     INPUT),
@@ -422,12 +422,11 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	DEFAULT_PINMUX(GMI_AD12,        RSVD1,         NORMAL,    NORMAL,   INPUT),
 	DEFAULT_PINMUX(GMI_AD13,        RSVD1,         NORMAL,    NORMAL,   INPUT),
 	DEFAULT_PINMUX(ULPI_DIR,        ULPI,          NORMAL,    NORMAL,   OUTPUT),
-	DEFAULT_PINMUX(ULPI_NXT,        ULPI,             NORMAL,     NORMAL,   OUTPUT),	
+	DEFAULT_PINMUX(ULPI_NXT,        ULPI,             NORMAL,     NORMAL,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_STP,        ULPI,          NORMAL,    NORMAL,   OUTPUT),
 	DEFAULT_PINMUX(GMI_CS4_N,       RSVD1,         NORMAL,    NORMAL,   INPUT),
 };
 
-/*Do not use for now*/
 static __initdata struct tegra_pingroup_config unused_pins_lowpower[] = {
 	DEFAULT_PINMUX(ULPI_CLK,        ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA0,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
@@ -439,7 +438,7 @@ static __initdata struct tegra_pingroup_config unused_pins_lowpower[] = {
 	DEFAULT_PINMUX(ULPI_DATA5,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA6,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA7,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
-#endif	
+#endif
 	DEFAULT_PINMUX(CLK1_REQ,        DAP,           NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(GMI_ADV_N,       RSVD1,         NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(GMI_CS1_N,       RSVD1,         NORMAL,    TRISTATE,   OUTPUT),
@@ -473,10 +472,6 @@ static __initdata struct tegra_pingroup_config unused_pins_lowpower[] = {
 
 };
 
-static void __init kai_pinmux_audio_init(void)
-{
-}
-
 /* We are disabling this code for now. */
 #define GPIO_INIT_PIN_MODE(_gpio, _is_input, _value)	\
 	{					\
@@ -508,18 +503,14 @@ static void __init kai_gpio_init_configure(void)
 
 int __init kai_pinmux_init(void)
 {
-	struct board_info board_info;
-	tegra_get_board_info(&board_info);
-	BUG_ON(board_info.board_id != BOARD_E1565);
 	kai_gpio_init_configure();
 
-	tegra_pinmux_config_table(kai_pinmux_common, ARRAY_SIZE(kai_pinmux_common));
+	tegra_pinmux_config_table(kai_pinmux_common,
+			ARRAY_SIZE(kai_pinmux_common));
 	tegra_drive_pinmux_config_table(kai_drive_pinmux,
-					ARRAY_SIZE(kai_drive_pinmux));
-
+			ARRAY_SIZE(kai_drive_pinmux));
 	tegra_pinmux_config_table(unused_pins_lowpower,
-		ARRAY_SIZE(unused_pins_lowpower));
-	kai_pinmux_audio_init();
+			ARRAY_SIZE(unused_pins_lowpower));
 
 	return 0;
 }
@@ -534,9 +525,7 @@ int __init kai_pinmux_init(void)
 	}
 
 struct gpio_init_pin_info pin_lpm_kai_common[] = {
-	//PIN_GPIO_LPM("GMI_CS4_N", TEGRA_GPIO_PK2, 1, 0),
 	PIN_GPIO_LPM("GMI_CS7",   TEGRA_GPIO_PI6, 1, 0),
-	//PIN_GPIO_LPM("GMI_CS0",   TEGRA_GPIO_PJ0, 1, 0),
 	PIN_GPIO_LPM("GMI_CS1",   TEGRA_GPIO_PJ2, 1, 0),
 };
 
