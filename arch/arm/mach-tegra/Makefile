@@ -211,14 +211,14 @@ obj-y                                   += eeprom-wifi-mac.o
 obj-${CONFIG_TEGRA_BB_XMM_POWER}        += baseband-xmm-power.o
 obj-${CONFIG_TEGRA_BB_XMM_POWER2}       += baseband-xmm-power2.o
 
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-kbc.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-memory.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-panel.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-pinmux.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-power.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-sdhci.o
-obj-${CONFIG_MACH_NABI2}                  += board-nabi2-sensors.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-kbc.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-memory.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-panel.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-pinmux.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-power.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-sdhci.o
+obj-${CONFIG_MACH_QC750}                  += board-nabi2-sensors.o
 
 obj-${CONFIG_MACH_TDW720F}              += board-tdw720f.o
 obj-${CONFIG_MACH_TDW720F}              += board-tdw720f-pinmux.o

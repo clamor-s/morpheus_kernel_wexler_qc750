@@ -118,7 +118,7 @@ config MACH_VENTANA
        select MACH_HAS_SND_SOC_TEGRA_WM8903 if SND_SOC
        help
          Support for NVIDIA Ventana development platform
-         
+
 config MACH_TDW720F
        bool "Ventana board"
        depends on ARCH_TEGRA_2x_SOC
@@ -228,13 +228,6 @@ config MACH_KAI
        help
          Support for NVIDIA KAI development platform
 
-config MACH_NABI2
-       bool "nabi2 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_RT5631 if SND_SOC
-       help
-         Support for NABI2
-         
 config MACH_QC750
        bool "QC750 from Kai board"
        depends on ARCH_TEGRA_3x_SOC
@@ -242,96 +235,12 @@ config MACH_QC750
        help
          Support for QC750
 
-config MACH_N710
-       bool "N710 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for N710
-
-config MACH_ITQ701
-       bool "ITQ701 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for ITQ701
-
-config MACH_ITQ700
-       bool "ITQ700 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for ITQ700
-config MACH_MM3201
-       bool "MM3201 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for MM3201
-
-config MACH_WIKIPAD
-       bool "WIKIPAD from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for WIKIPAD
-
-config MACH_N1010
-       bool "N1010 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for N1010
-
-config MACH_N750
-       bool "N750 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
-       help
-         Support for N750
-
-config MACH_BIRCH
-       bool "BIRCH from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
-       help
-         Support for BIRCH
-
-config MACH_NS_14T004
-       bool "NS_14T004 from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for NS_14T004
-
-
-config MACH_NABI2_3D
-       bool "nabi2_3d from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_RT5631 if SND_SOC
-       help
-         Support for NABI2_3D
-
-config MACH_NABI2_XD
-       bool "nabi2_xd from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for NABI2_XD
-
-config MACH_NABI_2S
-       bool "nabi_2s from Kai board"
-       depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X if SND_SOC
-       help
-         Support for NABI_2S
-
 config MACH_CM9000
        bool "cm9000 from Kai board"
        depends on ARCH_TEGRA_3x_SOC
        select MACH_HAS_SND_SOC_TEGRA_RT5631 if SND_SOC
        help
-         Support for cm9000         
+         Support for cm9000
 
 choice
        prompt "Tegra platform type"
@@ -716,7 +625,7 @@ config TEGRA_DC_USE_HW_BPP
 	  Programs platform data to inform DC driver to use current
 	  hardware value for bits per pixel setting.  Useful for
           preserving and displaying framebuffer content from bootloader.
-          
+
 config KEENHI_NV_DC_DSI_OUT
        bool "NV dsi from Kai board"
        depends on ARCH_TEGRA_3x_SOC
