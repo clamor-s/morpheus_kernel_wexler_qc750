@@ -35,7 +35,6 @@
 #include <linux/tegra_uart.h>
 #include <linux/memblock.h>
 #include <linux/spi-tegra.h>
-#include <linux/nfc/pn544.h>
 #include <linux/skbuff.h>
 #include <linux/ti_wilink_st.h>
 #include <linux/regulator/consumer.h>
@@ -59,7 +58,7 @@
 #include <mach/usb_phy.h>
 #include <mach/thermal.h>
 #include <mach/tegra_fiq_debugger.h>
-#include <linux/nfc/bcm2079x.h>
+
 #include "board.h"
 #include "clock.h"
 #include "board-nabi2.h"
@@ -69,13 +68,12 @@
 #include "pm.h"
 #include "wdt-recovery.h"
 
-#include <linux/i2c/ft5x0x_ts_data.h>
+#ifdef CONFIG_TOUCHSCREEN_NT11003_2
 #include <linux/novatek_ts_data.h>
+#endif
 
-#include <linux/simple_otg_vbus.h>
-
-#if defined(CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X)
-	#include <mach/tegra_aic325x_pdata.h>
+#ifdef CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X
+#include <mach/tegra_aic325x_pdata.h>
 #endif
 
 #ifdef CONFIG_TEGRA_THERMAL_THROTTLE
@@ -137,7 +135,7 @@ static struct balanced_throttle throttle_list[] = {
 	},
 #endif
 };
-#ifndef CONFIG_SENSORS_TMP401
+
 #ifdef CONFIG_TEGRA_SKIN_THROTTLE
 /* Skin timer trips */
 static struct tegra_thermal_timer_trip skin_therm_timer_trips[] = {
@@ -149,13 +147,13 @@ static struct tegra_thermal_timer_trip skin_therm_timer_trips[] = {
 
 /* Skin active throttle size must be one. */
 static struct throttle_table throttle_freqs_tskin_active_0[] = {
-	      /*    CPU,    CBUS,    SCLK,     EMC */
-	      { 1200000,  NO_CAP,  NO_CAP,  NO_CAP },
+	/*    CPU,    CBUS,    SCLK,     EMC */
+	{ 1200000,  NO_CAP,  NO_CAP,  NO_CAP },
 };
 
 static struct throttle_table throttle_freqs_tskin_active_1[] = {
-	      /*    CPU,    CBUS,    SCLK,     EMC */
-	      { 1000000,  NO_CAP,  NO_CAP,  NO_CAP },
+	/*    CPU,    CBUS,    SCLK,     EMC */
+	{ 1000000,  NO_CAP,  NO_CAP,  NO_CAP },
 };
 
 static struct skin_therm_active_throttle skin_therm_actives[] = {
@@ -211,92 +209,7 @@ static struct tegra_thermal_data thermal_data = {
 	.skin_active_size = ARRAY_SIZE(skin_therm_actives),
 #endif
 };
-#else
-/* Skin active throttle size must be one. */
-static struct throttle_table throttle_freqs_tskin_active_0[] = {
-	      /*    CPU,    CBUS,    SCLK,     EMC */
-	      { 1200000,  NO_CAP,  NO_CAP,  NO_CAP },
-};
 
-static struct throttle_table throttle_freqs_tskin_active_1[] = {
-	      /*    CPU,    CBUS,    SCLK,     EMC */
-	      { 1000000,  NO_CAP,  NO_CAP,  NO_CAP },
-};
-static struct skin_therm_active_throttle skin_therm_actives[] = {
-	{
-		.bthrot = {
-			.id = BALANCED_THROTTLE_ID_SKIN + 1,
-			.throt_tab_size =
-				ARRAY_SIZE(throttle_freqs_tskin_active_0),
-			.throt_tab = throttle_freqs_tskin_active_0,
-		},
-		.trip_temp = 33000,
-		.hysteresis = 0,
-	},
-	{
-		.bthrot = {
-			.id = BALANCED_THROTTLE_ID_SKIN + 2,
-			.throt_tab_size =
-				ARRAY_SIZE(throttle_freqs_tskin_active_1),
-			.throt_tab = throttle_freqs_tskin_active_1,
-		},
-		.trip_temp = 38000,
-		.hysteresis = 0,
-	},
-};
-
-/* All units are in millicelsius */
-static struct tegra_thermal_data thermal_data = {
-	.shutdown_device_id = THERMAL_DEVICE_ID_NCT_EXT,
-	.temp_shutdown = 90000,
-#if defined(CONFIG_TEGRA_EDP_LIMITS) || defined(CONFIG_TEGRA_THERMAL_THROTTLE)
-	.throttle_edp_device_id = THERMAL_DEVICE_ID_NCT_EXT,
-#endif
-#ifdef CONFIG_TEGRA_EDP_LIMITS
-	.edp_offset = TDIODE_OFFSET,  /* edp based on tdiode */
-	.hysteresis_edp = 3000,
-#endif
-#ifdef CONFIG_TEGRA_THERMAL_THROTTLE
-	.temp_throttle = 85000,
-	.tc1 = 0,
-	.tc2 = 1,
-	.passive_delay = 2000,
-#endif
-#ifdef CONFIG_TEGRA_SKIN_THROTTLE
-	.skin_device_id = THERMAL_DEVICE_ID_SKIN,
-	.temp_throttle_skin = 45000, //45000 wlp modify 20130903
-        .tc1_skin = 0,
-        .tc2_skin = 1,
-        .passive_delay_skin = 5000,
-
-	 .skin_actives = skin_therm_actives,
-	 .skin_active_size = ARRAY_SIZE(skin_therm_actives),
-        .skin_temp_offset = 5680,  // 8066,
-        .skin_period = 2100,
-        .skin_devs_size = 2,
-       .skin_devs = {
-        {
-                "nct_ext_coeff",
-                THERMAL_DEVICE_ID_NCT_EXT,
-                {
-                	5, 2, 0 ,-2 ,-2, -1, -2 ,-4, 0, -2, 2, 0, -1, -2 ,-3 ,-1, -1, -2, -2, -11,
-                //      -36, -3, 4, 5, 4, 3, 0, -2,0, 2, 2, -2, -1, -1, 1, 0, 0, -3, -8, -45,
-                }
-        },
-        {
-                "nct_int_coeff",
-                THERMAL_DEVICE_ID_NCT_INT,
-                {
-                     20, 7, 3, 3, 2, 3, 3, 3, 2, 2, 4, 4, 3, 3, 3 ,1, 0 ,3 ,7, 26,
-              //        23, 12, 7, 7, 9, 9, 7, 7, 10, 4, 8, 9, 8, 5, 7, 5, 3, 1, 2, 0,
-                }
-        },
-	 },
-
-#endif
-};
-
-#endif
 /* wl128x BT, FM, GPS connectivity chip */
 struct ti_st_plat_data ti_wilink_pdata = {
 	.nshutdown_gpio = TEGRA_GPIO_PU0,
@@ -331,14 +244,12 @@ static struct resource ti_bluesleep_resources[] = {
 	},
 };
 
-
 static struct platform_device ti_bluesleep_device = {
 	.name		= "bluesleep",
 	.id		= 0,
 	.num_resources	= ARRAY_SIZE(ti_bluesleep_resources),
 	.resource	= ti_bluesleep_resources,
 };
-
 
 static noinline void __init ti_tegra_setup_tibluesleep(void)
 {
@@ -439,8 +350,7 @@ static struct i2c_board_info kai_i2c4_max17048_board_info[] = {
 	},
 };
 
-#if defined(CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X)
-
+#ifdef CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X
 static struct tegra_aic325x_platform_data kai_tlv320aic325x_pdata = {
         .irq_active_low = 0,
         .micdet_cfg = 0,
@@ -450,7 +360,6 @@ static struct tegra_aic325x_platform_data kai_tlv320aic325x_pdata = {
 };
 
 static struct i2c_board_info __initdata tlv320aic325x_board_info = {
-
 		I2C_BOARD_INFO("tlv320aic325x", 0x18),
 		.platform_data=&kai_tlv320aic325x_pdata,
 		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_HP_DET),
@@ -471,7 +380,7 @@ static void kai_i2c_init(void)
 	platform_device_register(&tegra_i2c_device2);
 	platform_device_register(&tegra_i2c_device1);
 
-#if defined(CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X)
+#ifdef CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X
 	i2c_register_board_info(4,  &tlv320aic325x_board_info, 1);
 #endif
 
@@ -624,9 +533,7 @@ static struct platform_device tegra_camera = {
 static struct platform_device *kai_spi_devices[] __initdata = {
 	&tegra_spi_device1,
 };
-static struct platform_device *nabi2_xd_spi_devices[] __initdata = {
-	&tegra_spi_device2,
-};
+
 static struct spi_clk_parent spi_parent_clk[] = {
 	[0] = {.name = "pll_p"},
 #ifndef CONFIG_TEGRA_PLLM_RESTRICTED
@@ -663,15 +570,8 @@ static void __init kai_spi_init(void)
 	kai_spi1_pdata.parent_clk_list = spi_parent_clk;
 	kai_spi1_pdata.parent_clk_count = ARRAY_SIZE(spi_parent_clk);
 	tegra_spi_device1.dev.platform_data = &kai_spi1_pdata;
-	if(machine_is_nabi2_xd())
-		platform_add_devices(nabi2_xd_spi_devices,
-					ARRAY_SIZE(nabi2_xd_spi_devices));
-	else
-		platform_add_devices(kai_spi_devices,
-					ARRAY_SIZE(kai_spi_devices));
-
+	platform_add_devices(kai_spi_devices, ARRAY_SIZE(kai_spi_devices));
 }
-
 
 static struct resource tegra_rtc_resources[] = {
 	[0] = {
@@ -693,32 +593,29 @@ static struct platform_device tegra_rtc_device = {
 	.num_resources = ARRAY_SIZE(tegra_rtc_resources),
 };
 
-
-#if defined(CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X)
-
-	static struct tegra_aic325x_platform_data kai_audio_ti_pdata = {
-	        .gpio_spkr_en           = TEGRA_GPIO_SPKR_EN,
-	        .gpio_hp_det            = TEGRA_GPIO_HP_DET,
-	        .gpio_hp_mute           = -1,
-	        .gpio_int_mic_en        = -1,
-	        .gpio_ext_mic_en        = -1,
-	        .gpio_aic325x_reset = TEGRA_GPIO_RT5631_RST,
-	        .i2s_param[HIFI_CODEC]	= {
+#ifdef CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X
+static struct tegra_aic325x_platform_data kai_audio_ti_pdata = {
+	.gpio_spkr_en           = TEGRA_GPIO_SPKR_EN,
+	.gpio_hp_det            = TEGRA_GPIO_HP_DET,
+	.gpio_hp_mute           = -1,
+	.gpio_int_mic_en        = -1,
+	.gpio_ext_mic_en        = -1,
+	.gpio_aic325x_reset = TEGRA_GPIO_RT5631_RST,
+	.i2s_param[HIFI_CODEC]	= {
 		.audio_port_id	= 0,
 		.is_i2s_master	= 1,
 		.i2s_mode	= TEGRA_DAIFMT_I2S,
 	},
-	//	.audio_port_id[NUM_I2S_DEVICES] = 1,
-	};
+//	.audio_port_id[NUM_I2S_DEVICES] = 1,
+};
 
-
-	static struct platform_device kai_audio_ti_device = {
-		.name	= "tegra-snd-aic325x",
-		.id	= 0,
-		.dev	= {
-			.platform_data  = &kai_audio_ti_pdata,
-		},
-	};
+static struct platform_device kai_audio_ti_device = {
+	.name	= "tegra-snd-aic325x",
+	.id	= 0,
+	.dev	= {
+		.platform_data  = &kai_audio_ti_pdata,
+	},
+};
 #endif
 
 static struct gpio_led kai_led_info[] = {
@@ -745,13 +642,6 @@ static struct platform_device kai_leds_gpio_device = {
 	},
 };
 
-#if defined(CONFIG_MRVLSD8787_RFKILL)
-static struct platform_device kai_mrvl8787_rfkill_device = {
-	.name = "mrvlsd8787_rfkill",
-	.id 			= -1,
-};
-#endif
-
 static struct platform_device *kai_devices[] __initdata = {
 	&tegra_pmu_device,
 	&tegra_rtc_device,
@@ -762,11 +652,11 @@ static struct platform_device *kai_devices[] __initdata = {
 	&tegra_wdt0_device,
 	&tegra_wdt1_device,
 	&tegra_wdt2_device,
-#if defined(CONFIG_TEGRA_AVP)
+#ifdef CONFIG_TEGRA_AVP
 	&tegra_avp_device,
 #endif
 	&tegra_camera,
-#if defined(CONFIG_CRYPTO_DEV_TEGRA_SE)
+#ifdef CONFIG_CRYPTO_DEV_TEGRA_SE
 	&tegra_se_device,
 #endif
 	&tegra_ahub_device,
@@ -779,13 +669,10 @@ static struct platform_device *kai_devices[] __initdata = {
 	&tegra_spdif_device,
 	&spdif_dit_device,
 	&bluetooth_dit_device,
-#if defined(CONFIG_MRVLSD8787_RFKILL)
-	&kai_mrvl8787_rfkill_device,
-#endif
 	&tegra_pcm_device,
 	&kai_leds_gpio_device,
 	&tegra_hda_device,
-#if defined(CONFIG_CRYPTO_DEV_TEGRA_AES)
+#ifdef CONFIG_CRYPTO_DEV_TEGRA_AES
 	&tegra_aes_device,
 #endif
 };
@@ -839,7 +726,6 @@ static struct tegra_usb_platform_data tegra_ehci1_utmi_pdata = {
 	},
 };
 
-
 static struct tegra_usb_platform_data tegra_ehci2_utmi_pdata = {
 	.port_otg = false,
 	.has_hostpc = true,
@@ -891,13 +777,12 @@ static struct tegra_usb_platform_data tegra_ehci3_utmi_pdata = {
     },
 };
 
-
 static struct tegra_usb_otg_data tegra_otg_pdata = {
 	.ehci_device = &tegra_ehci1_device,
 	.ehci_pdata = &tegra_ehci1_utmi_pdata,
 };
 
-#if CONFIG_USB_SUPPORT
+#ifdef CONFIG_USB_SUPPORT
 static void kai_usb_init(void)
 {
 	tegra_otg_device.dev.platform_data = &tegra_otg_pdata;
@@ -909,13 +794,9 @@ static void kai_usb_init(void)
 	tegra_ehci2_device.dev.platform_data = &tegra_ehci2_utmi_pdata;
 	platform_device_register(&tegra_ehci2_device);
 
-	if(machine_is_qc750())
-	{
-	    tegra_ehci3_device.dev.platform_data = &tegra_ehci3_utmi_pdata;
-	    platform_device_register(&tegra_ehci3_device);
-	}
+    tegra_ehci3_device.dev.platform_data = &tegra_ehci3_utmi_pdata;
+    platform_device_register(&tegra_ehci3_device);
 }
-
 #else
 static void kai_usb_init(void) { }
 static void kai_modem_init(void) { }
@@ -923,65 +804,28 @@ static void kai_modem_init(void) { }
 
 static void kai_audio_init(void)
 {
-#if defined(CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X) && defined(CONFIG_MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X)
+#ifdef CONFIG_SND_SOC_TEGRA_SOC_TLV320AIC325X
 	kai_audio_ti_pdata.codec_name = "tlv320aic325x.4-0018";
 	kai_audio_ti_pdata.codec_dai_name = "TLV320AIC325x";
 	platform_device_register(&kai_audio_ti_device);
 #endif
 }
 
-static struct FT5X0X_i2c_ts_platform_data FT5X0X_data = {
-      .gpio_shutdown = TEGRA_GPIO_PK7,
-};
-
-static const struct i2c_board_info ventana_i2c_bus1_FT5X0X_info[] = {
-	{
-	 I2C_BOARD_INFO("ft5x0x_ts", 0x38),           //0x70),
-	 .irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PJ0),
-	 .platform_data=&FT5X0X_data,
-	 },
-};
-
-#ifdef CONFIG_TOUCHSCREEN_FT5X0X
-static int __init kai_touch_init_Focaltech(void)
-{
-	i2c_register_board_info(1, ventana_i2c_bus1_FT5X0X_info, 1);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT, "tp_detect");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT_0, "tp_detect0");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT_0);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT_1, "tp_detect1");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT_1);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT_2, "tp_detect2");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT_2);
-
-	gpio_request(TEGRA_GPIO_PK7, "tp_enable2");
-	gpio_direction_output(TEGRA_GPIO_PK7, 1);
-	gpio_set_value(TEGRA_GPIO_PK7,1);
-
-	return 0;
-}
-#endif
-
-#if defined (CONFIG_TOUCHSCREEN_NT11003_2)
+#ifdef CONFIG_TOUCHSCREEN_NT11003_2
 static int nt1103_detect(void)
 {
-	int touch_detect = gpio_get_value(TEGRA_GPIO_TOUCH_DETECT);
-	int touch_detect1 =  gpio_get_value(TEGRA_GPIO_TOUCH_DETECT_0);
-	int touch_detect2=  gpio_get_value(TEGRA_GPIO_TOUCH_DETECT_1);
-	int touch_detect3= gpio_get_value(TEGRA_GPIO_TOUCH_DETECT_2);
+	int touch_detect  = gpio_get_value(TEGRA_GPIO_TOUCH_DETECT);
+	int touch_detect1 = gpio_get_value(TEGRA_GPIO_TOUCH_DETECT_0);
+	int touch_detect2 = gpio_get_value(TEGRA_GPIO_TOUCH_DETECT_1);
+	int touch_detect3 = gpio_get_value(TEGRA_GPIO_TOUCH_DETECT_2);
 	int status;
 
-	status = (touch_detect<<3) |(touch_detect1 <<2) |(touch_detect2<<1) |(touch_detect3) ;
+	status = (touch_detect << 3) | (touch_detect1 << 2) | (touch_detect2 << 1) | (touch_detect3);
 
 	return status;
 }
 
-static struct novatek_i2c_platform_data  nt1103_ts_data={
+static struct novatek_i2c_platform_data nt1103_ts_data = {
 	.detect = nt1103_detect,
 };
 
@@ -995,21 +839,19 @@ static const struct i2c_board_info ventana_i2c_bus1_NT11003_info[] = {
 
 static int __init NT11003_touch_init(void)
 {
-	printk("=====touch====\n");
+	pr_info("NT11003_touch_init\n");
+
 	gpio_request(TEGRA_GPIO_PK7, "tp_rst");
 	gpio_direction_output(TEGRA_GPIO_PK7, 1);
 
 	gpio_request(TEGRA_GPIO_PJ0, "tp_int");
 	gpio_direction_input(TEGRA_GPIO_PJ0);
 
-
 	gpio_request(TEGRA_GPIO_PZ3, "tp_rst18");
 	gpio_direction_input(TEGRA_GPIO_PZ3);
 
 	gpio_request(TEGRA_GPIO_PN5, "tp_int18");
 	gpio_direction_input(TEGRA_GPIO_PN5);
-
-
 
 	gpio_request(TEGRA_GPIO_TOUCH_DETECT, "tp_detect");
 	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT);
@@ -1029,58 +871,11 @@ static int __init NT11003_touch_init(void)
 }
 #endif
 
-#if defined (CONFIG_TOUCHSCREEN_GOODIX_GT9XX)
-static const struct i2c_board_info ventana_i2c_bus1_Goodix_GT9XX[] = {
-	{
-	 I2C_BOARD_INFO("Goodix-TS", (0x5d)),
-	},
-};
-
-static int __init Goodix_GT9XX_touch_init(void)
-{
-//init gpio for auto detect which TP is used
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT, "tp_detect");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT_0, "tp_detect0");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT_0);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT_1, "tp_detect1");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT_1);
-
-	gpio_request(TEGRA_GPIO_TOUCH_DETECT_2, "tp_detect2");
-	gpio_direction_input(TEGRA_GPIO_TOUCH_DETECT_2);
-
-	i2c_register_board_info(1, ventana_i2c_bus1_Goodix_GT9XX, 1);
-
-	return 0;
-}
-#endif
-
-#ifdef CONFIG_SIMPLE_OTG_VBUS
-static  const struct simple_otg_vbus mOtgVbusData ={
-	.mVbusPin =TEGRA_GPIO_PH1,
-};
-
-static struct platform_device simple_otg_device = {
-	.name = "simple_otg_vbus",
-	.id   = -1,
-	.dev	= {
-		.platform_data = &mOtgVbusData,
-	},
-};
-#endif
-
 static void __init tegra_usb_vbus(void)
 {
 	gpio_request(TEGRA_GPIO_PH1, "init_vbus");
 	gpio_direction_output(TEGRA_GPIO_PH1, 0);
 	gpio_free(TEGRA_GPIO_PH1);
-
-#ifdef CONFIG_SIMPLE_OTG_VBUS
-	platform_device_register(&simple_otg_device);
-#endif
-
 }
 
 static void __init tegra_kai_init(void)
@@ -1108,14 +903,8 @@ static void __init tegra_kai_init(void)
 	kai_sdhci_init();
 	kai_regulator_init();
 	kai_suspend_init();
-#ifdef CONFIG_TOUCHSCREEN_FT5X0X
-	kai_touch_init_Focaltech();
-#endif
 #ifdef CONFIG_TOUCHSCREEN_NT11003_2
 	NT11003_touch_init();
-#endif
-#ifdef CONFIG_TOUCHSCREEN_GOODIX_GT9XX
-	Goodix_GT9XX_touch_init();
 #endif
 	kai_keys_init();
 	kai_panel_init();
@@ -1137,7 +926,7 @@ static void __init kai_ramconsole_reserve(unsigned long size)
 
 static void __init tegra_kai_reserve(void)
 {
-#if defined(CONFIG_NVMAP_CONVERT_CARVEOUT_TO_IOVMM)
+#ifdef CONFIG_NVMAP_CONVERT_CARVEOUT_TO_IOVMM
 	/* support 1920X1200 with 24bpp */
 	tegra_reserve(0, SZ_8M + SZ_1M, SZ_8M + SZ_1M);
 #else

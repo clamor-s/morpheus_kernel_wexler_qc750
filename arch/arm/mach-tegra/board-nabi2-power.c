@@ -566,6 +566,5 @@ int __init nabi2_hold_avdd_usb(void){
 
 	return 0;
 }
-
 late_initcall(nabi2_hold_avdd_usb);
 

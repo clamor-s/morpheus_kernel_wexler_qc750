@@ -39,7 +39,6 @@
 #define TI_WLAN_IRQ	TEGRA_GPIO_PV1
 
 #define NABI2_SD_CD TEGRA_GPIO_PI5
-#define NABI2_SD_POWER TEGRA_GPIO_PC6
 
 static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
@@ -47,8 +46,6 @@ static int nabi2_wifi_status_register(void (*callback)(int , void *), void *);
 
 static int nabi2_wifi_power(int on);
 static int nabi2_wifi_set_carddetect(int val);
-
-static int nabi2_wifi_status = 0;
 
 static struct wl12xx_platform_data ti_wlan_data __initdata = {
 	.irq = TEGRA_GPIO_TO_IRQ(TI_WLAN_IRQ),
@@ -161,12 +158,6 @@ static struct platform_device tegra_sdhci_device3 = {
 	},
 };
 
-int nabi2_get_wifi_status(void)
-{
-	//printk("nabi2_wifi_status = %d\n",nabi2_wifi_status);
-	return nabi2_wifi_status;
-}
-
 static int nabi2_wifi_status_register(
 		void (*callback)(int card_present, void *dev_id),
 		void *dev_id)
@@ -197,11 +188,13 @@ static int nabi2_wifi_power(int on)
 	 */
  	struct tegra_io_dpd *sd_dpd;
  	sd_dpd = tegra_io_dpd_get(&ti_sdhci_device2.dev);
+
 	if (sd_dpd) {
 		mutex_lock(&sd_dpd->delay_lock);
 		tegra_io_dpd_disable(sd_dpd);
 		mutex_unlock(&sd_dpd->delay_lock);
 	}
+
 	if (on) {
 		gpio_set_value(TI_WLAN_EN, 1);
 		mdelay(15);
@@ -222,34 +215,25 @@ static int nabi2_wifi_power(int on)
 	return 0;
 }
 
-#ifdef CONFIG_TEGRA_PREPOWER_WIFI
-static int __init kai_wifi_prepower(void)
-{
-	return 0;
-}
-
-subsys_initcall_sync(kai_wifi_prepower);
-#endif
-
 static void ti_wifi_init(void)
 {
 	int rc;
 
 	rc = gpio_request(TI_WLAN_EN, "wl12xx-power");
 	if (rc)
-		pr_err("WLAN_EN gpio request failed:%d\n", rc);
+		pr_err("WLAN_EN gpio request failed: %d\n", rc);
 
 	rc = gpio_request(TI_WLAN_IRQ, "wl12xx");
 	if (rc)
-		pr_err("WLAN_IRQ gpio request failed:%d\n", rc);
+		pr_err("WLAN_IRQ gpio request failed: %d\n", rc);
 
 	rc = gpio_direction_output(TI_WLAN_EN, 0);
 	if (rc)
-		pr_err("WLAN_EN gpio direction configuration failed:%d\n", rc);
+		pr_err("WLAN_EN gpio direction configuration failed: %d\n", rc);
 
 	rc = gpio_direction_input(TI_WLAN_IRQ);
 	if (rc)
-		pr_err("WLAN_IRQ gpio direction configuration failed:%d\n", rc);
+		pr_err("WLAN_IRQ gpio direction configuration failed: %d\n", rc);
 
 	if (wl12xx_set_platform_data(&ti_wlan_data))
 		pr_err("Error setting wl12xx data\n");

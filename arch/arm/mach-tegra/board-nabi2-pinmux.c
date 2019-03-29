@@ -261,7 +261,7 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	DEFAULT_PINMUX(DAP2_DIN,        I2S1,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(DAP2_DOUT,       I2S1,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(DAP2_SCLK,       I2S1,            NORMAL,    NORMAL,     INPUT),
-#if defined(CONFIG_BRIDGE_SSD2828)||defined(CONFIG_KEENHI_NV_DC_DSI_OUT)
+#ifdef CONFIG_KEENHI_NV_DC_DSI_OUT
 	DEFAULT_PINMUX(DAP3_DIN,        I2S2,          NORMAL,    NORMAL,   OUTPUT),
 	DEFAULT_PINMUX(DAP3_DOUT,       I2S2,          NORMAL,    NORMAL,   OUTPUT),
 #endif
@@ -344,7 +344,7 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	DEFAULT_PINMUX(GPIO_PU5,        PWM2,            PULL_DOWN,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GPIO_PU6,        RSVD1,           NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(KB_ROW14,        KBC,             NORMAL,    TRISTATE,   OUTPUT),
-#if defined(CONFIG_BRIDGE_SSD2828)||defined(CONFIG_KEENHI_NV_DC_DSI_OUT)
+#ifdef CONFIG_KEENHI_NV_DC_DSI_OUT
 	DEFAULT_PINMUX(ULPI_DATA4,      SPI2,          NORMAL,    NORMAL,   INPUT),
 	DEFAULT_PINMUX(ULPI_DATA5,      SPI2,          NORMAL,    NORMAL,   INPUT),
 	DEFAULT_PINMUX(ULPI_DATA6,      SPI2,          NORMAL,    NORMAL,   INPUT),
@@ -371,14 +371,9 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 
 	/* SDMMC */
 	DEFAULT_PINMUX(GMI_IORDY,       RSVD1,           PULL_UP,   NORMAL,     INPUT),
-#if defined(CONFIG_BRIDGE_SSD2828)
 	/* CODEC */
-	DEFAULT_PINMUX(SPI2_SCK,        GMI,            NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(SPI2_CS1_N,      RSVD,            NORMAL,    NORMAL,     INPUT),
-#else
 	DEFAULT_PINMUX(SPI2_SCK,        SPI2,            NORMAL,    NORMAL,     OUTPUT),
 	DEFAULT_PINMUX(SPI2_CS1_N,      SPI2,            NORMAL,    NORMAL,     INPUT),
-#endif
 	DEFAULT_PINMUX(GMI_CS2_N,       RSVD1,           PULL_UP,    NORMAL,     OUTPUT),
 	DEFAULT_PINMUX(GMI_CS3_N,       RSVD1,           NORMAL,    NORMAL,     OUTPUT),
 
@@ -404,15 +399,9 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	DEFAULT_PINMUX(HDMI_CEC,        CEC,             NORMAL,    NORMAL,     INPUT),
 
 	DEFAULT_PINMUX(KB_ROW15,        KBC,             NORMAL,    NORMAL,     OUTPUT),
-#if defined(CONFIG_BRIDGE_SSD2828)
-	DEFAULT_PINMUX(SPI2_CS2_N,      RSVD,            NORMAL,    NORMAL,     INPUT),
-	DEFAULT_PINMUX(SPI2_MISO,       GMI,            NORMAL,    NORMAL,     OUTPUT),
-	DEFAULT_PINMUX(SPI2_MOSI,       GMI,            NORMAL,    NORMAL,     INPUT),
-#else
 	DEFAULT_PINMUX(SPI2_CS2_N,      SPI2,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(SPI2_MISO,       SPI2,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(SPI2_MOSI,       SPI2,            NORMAL,    NORMAL,     INPUT),
-#endif
 	DEFAULT_PINMUX(KB_ROW11,        KBC,             PULL_UP,   TRISTATE,   INPUT),
 	DEFAULT_PINMUX(KB_ROW12,        KBC,             NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(KB_ROW13,        KBC,             NORMAL,    TRISTATE,   OUTPUT),
@@ -433,7 +422,7 @@ static __initdata struct tegra_pingroup_config unused_pins_lowpower[] = {
 	DEFAULT_PINMUX(ULPI_DATA1,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA2,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA3,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
-#if !defined(CONFIG_BRIDGE_SSD2828)&&!defined(CONFIG_KEENHI_NV_DC_DSI_OUT)
+#if !defined(CONFIG_KEENHI_NV_DC_DSI_OUT)
 	DEFAULT_PINMUX(ULPI_DATA4,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA5,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(ULPI_DATA6,      ULPI,          NORMAL,    TRISTATE,   OUTPUT),
@@ -464,7 +453,7 @@ static __initdata struct tegra_pingroup_config unused_pins_lowpower[] = {
 	DEFAULT_PINMUX(VI_D1,           VI,            NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(VI_D10,          VI,            NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(VI_D11,          VI,            NORMAL,    TRISTATE,   OUTPUT),
-#if !defined(CONFIG_BRIDGE_SSD2828)&&!defined(CONFIG_KEENHI_NV_DC_DSI_OUT)
+#if !defined(CONFIG_KEENHI_NV_DC_DSI_OUT)
 	DEFAULT_PINMUX(DAP3_DIN,        I2S2,          NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(DAP3_DOUT,       I2S2,          NORMAL,    TRISTATE,   OUTPUT),
 #endif
